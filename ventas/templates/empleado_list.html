@@ -1,0 +1,46 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Empleados</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+{% include "navbar.html" %}
+<div class="container mt-4">
+    <h2>Empleados</h2>
+    <a href="{% url 'empleado_create' %}" class="btn btn-success mb-3">Agregar Empleado</a>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Usuario</th>
+                <th>Email</th>
+                <th>Admin</th>
+                <th>Activo</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for empleado in empleados %}
+            <tr>
+                <td>{{ empleado.user.username }}</td>
+                <td>{{ empleado.user.email }}</td>
+                <td>{{ empleado.es_admin }}</td>
+                <td>{{ empleado.user.is_active }}</td>
+                <td>
+                    <a href="{% url 'empleado_update' empleado.pk %}" class="btn btn-sm btn-primary">Editar</a>
+                    <a href="{% url 'empleado_delete' empleado.pk %}" class="btn btn-sm btn-danger">Eliminar</a>
+                    {% if empleado.user.is_active %}
+                    <a href="{% url 'empleado_logout' empleado.pk %}" class="btn btn-sm btn-warning">Desactivar</a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+</body>
+</html>

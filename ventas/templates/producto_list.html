@@ -1,0 +1,129 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Mi Ferretería{% endblock %}</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <style>
+        .table-custom thead th {
+            background: #222 !important;
+            color: #28a745 !important;
+            border-bottom: 2px solid #28a745 !important;
+        }
+        .table-custom {
+            background: #18191a;
+            color: #f8f9fa;
+        }
+        .table-custom tbody tr {
+            background: #18191a;
+        }
+        .table-custom tbody tr:nth-child(even) {
+            background: #222;
+        }
+        .table-custom a {
+            color: #28a745;
+        }
+        .table-custom a:hover {
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+{% include "navbar.html" %}  
+{% block content %}
+<div class="container py-3">
+    <h2 class="titulo text-center mb-4">Lista de Productos</h2>
+
+    <div class="row mb-3">
+        <div class="col-12 col-md-6 mb-2 mb-md-0">
+            <button class="btn btn-success btn-block" onclick="window.location.href='{% url 'producto_create' %}'">
+                Agregar Producto
+            </button>
+        </div>
+        <div class="col-12 col-md-6">
+            <button class="btn btn-primary btn-block" onclick="window.location.href='{% url 'cargar_archivo' %}'">
+                Cargar lista productos
+            </button>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-12 col-md-6 mb-2 mb-md-0">
+            <input type="text" id="productInput" class="form-control" onkeyup="filterTable('productInput', 0)" placeholder="Buscar por código...">
+        </div>
+        <div class="col-12 col-md-6">
+            <input type="text" id="typeInput" class="form-control" onkeyup="filterTable('typeInput', 1)" placeholder="Buscar por nombre...">
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-custom table-striped table-hover" id="productTable">
+            <thead>
+                <tr>
+                    <th>Codigo</th>
+                    <th>Nombre del Producto</th>
+                    <th>Precio Unidad</th>
+                    <th>Precio Bulto</th>
+                    <th>Imagen</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for producto in productos %}
+                <tr>
+                    <td>
+                        <a class="lista-producto" href="{% url 'producto_update' producto.pk %}">{{ producto.codigo }}</a>
+                    </td>
+                    <td>
+                        <a class="lista-producto" href="{% url 'producto_update' producto.pk %}">{{ producto.nombre }}</a>
+                    </td>
+                    <td>
+                        <a class="lista-producto" href="{% url 'producto_update' producto.pk %}">${{ producto.precio_unidad }}</a>
+                    </td>
+                    <td>
+                        <a class="lista-producto" href="{% url 'producto_update' producto.pk %}">${{ producto.precio_bulto }}</a>
+                    </td>
+                    <td>
+                        {% if producto.foto %}
+                            <img src="{{ producto.foto.url }}" alt="Foto de {{ producto.nombre }}" class="img-fluid rounded" style="max-width: 80px; max-height: 80px;">
+                        {% else %}
+                            <span class="text-muted">Sin foto</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    function filterTable(inputId, columnIndex) {
+        let input = document.getElementById(inputId);
+        let filter = input.value.toUpperCase();
+        let table = document.getElementById("productTable");
+        let tr = table.getElementsByTagName("tr");
+
+        for (let i = 1; i < tr.length; i++) {
+            let td = tr[i].getElementsByTagName("td")[columnIndex];
+            if (td) {
+                let txtValue = td.textContent || td.innerText;
+                if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                    tr[i].style.display = "";
+                } else {
+                    tr[i].style.display = "none";
+                }
+            }
+        }
+    }
+</script>
+
+{% endblock %}
+
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

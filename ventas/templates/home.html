@@ -1,0 +1,269 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Distribuidora MAyorista{% endblock %}</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <!-- Elimina o comenta cualquier línea que cargue style.css si quieres que el <style> tenga prioridad -->
+    <!-- <link rel="stylesheet" href="{% static 'css/style.css' %}"> -->
+    <style>
+        html, body {
+            height: 100%;
+            min-height: 100%;
+        }
+        body {
+            background: #18191a !important;
+            color: #f8f9fa !important;
+        }
+        .card-producto {
+            margin-bottom: 1rem;
+            position: relative;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center top;
+            min-height: 250px;
+        }
+        .card-producto .card-body {
+            position: relative;
+            background: rgba(30,30,30,0.92); /* Fondo oscuro para las cards */
+            color: #f8f9fa;
+            border-radius: 0.5rem;
+            margin-top: 120px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .floating-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 999;
+        }
+        .icon-check {
+            font-size: 1.5rem;
+            color: #ccc;
+            cursor: pointer;
+            margin-left: 10px;
+            transition: color 0.2s;
+        }
+        .icon-check.checked {
+            color: #28a745;
+        }
+        .cantidad-verde {
+            border: 2px solid #28a745 !important;
+            background: #eaffea !important;
+            color: #155724 !important;
+            font-weight: bold;
+        }
+        .precio-unidad, .precio-bulto {
+            font-size: 1.1rem;
+            font-weight: 600;
+            display: block;
+            text-align: center;
+            width: 100%;
+        }
+        .cantidad-input-pack {
+            border-radius: 1.5rem;
+            border: 1px solid #e0e0e0;
+            width: 100% !important;
+            margin-top: 0.5rem;
+            margin-bottom: 0.5rem;
+            text-align: center;
+            font-size: 1.1rem;
+        }
+        /* Responsive grid for products */
+        @media (max-width: 991px) {
+            .col-md-4.producto-card {
+                flex: 0 0 50%;
+                max-width: 50%;
+            }
+        }
+        @media (max-width: 767px) {
+            .col-md-4.producto-card {
+                flex: 0 0 100%;
+                max-width: 100%;
+            }
+            .card-producto .card-body {
+                margin-top: 80px;
+            }
+            .floating-btn {
+                right: 10px;
+                bottom: 10px;
+            }
+        }
+        .container-input input {
+            max-width: 400px;
+            margin: 0 auto 10px auto;
+            display: block;
+        }
+        @media (max-width: 575px) {
+            .container {
+                padding-left: 5px;
+                padding-right: 5px;
+            }
+            .card-producto .card-body {
+                padding: 0.8rem;
+            }
+        }
+        /* Asegura que las cards se mantengan alineadas y no se rompan */
+        .row.flex-wrap {
+            flex-wrap: wrap !important;
+        }
+        .producto-card {
+            display: flex;
+            align-items: stretch;
+        }
+        .card.card-producto {
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    {% if user.is_authenticated %}
+        {% include "navbar.html" %}
+    {% endif %}
+    <div class="container mt-4">
+        <h1 class="mb-4">Logo</h1>
+        <form id="clienteForm" class="mb-4">
+            <div class="form-row">
+                <div class="col-md-5 mb-2">
+<input type="text" class="form-control" id="nombreCliente" placeholder="Nombre y apellido" required
+    oninput="this.value = this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚüÜñÑ\s]/g, '')"
+    onpaste="event.preventDefault();
+             let paste = (event.clipboardData || window.clipboardData).getData('text');
+             paste = paste.replace(/[^a-zA-ZáéíóúÁÉÍÓÚüÜñÑ\s]/g, '');
+             document.execCommand('insertText', false, paste);">
+                </div>
+                <!-- Eliminado el input de teléfono del cliente -->
+            </div>
+        </form>
+        <div class="container-input mb-3">
+            <select id="categoriaSelect" class="form-control mb-2">
+                <option value="">Todas las categorías</option>
+                {% for categoria in categorias %}
+                    <option value="{{ categoria }}">{{ categoria }}</option>
+                {% endfor %}
+            </select>
+<input type="text" id="productInput" onkeyup="filterCards('productInput', 0)" class="form-control mb-2" placeholder="Buscar por código..."
+    oninput="this.value = this.value.replace(/[^a-zA-Z0-9]/g, '')"
+    onpaste="event.preventDefault();
+             let paste = (event.clipboardData || window.clipboardData).getData('text');
+             paste = paste.replace(/[^a-zA-Z0-9]/g, '');
+             document.execCommand('insertText', false, paste);">
+
+<input type="text" id="nameInput" onkeyup="filterCards('nameInput', 1)" class="form-control" placeholder="Buscar por nombre..."
+    oninput="this.value = this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚüÜñÑ\s]/g, '')"
+    onpaste="event.preventDefault();
+             let paste = (event.clipboardData || window.clipboardData).getData('text');
+             paste = paste.replace(/[^a-zA-ZáéíóúÁÉÍÓÚüÜñÑ\s]/g, '');
+             document.execCommand('insertText', false, paste);">
+   </div>
+        <div class="row flex-wrap" id="productosContainer">
+            {% for producto in productos %}
+            <div class="col-md-4 producto-card"
+                 data-categoria="{{ producto.categoria|default_if_none:'' }}"
+                 data-codigo="{{ producto.codigo|upper }}"
+                 data-nombre="{{ producto.nombre|upper }}">
+                <div class="card card-producto" {% if producto.foto %}style="background-image: url('{{ producto.foto.url }}');"{% endif %}>
+                    <div class="card-body">
+                        <h5 class="card-title codigo-producto">{{ producto.codigo }}</h5>
+                        <h5 class="card-title nombre-producto">{{ producto.nombre }}</h5>
+                        <p class="card-text mb-2">
+                            <span class="precio-unidad">Unidad: <strong>${{ producto.precio_unidad }}</strong></span>
+                            <span class="precio-bulto">Pack: <strong>${{ producto.precio_bulto }}</strong></span>
+                        </p>
+                        <input type="number" min="1" class="form-control cantidad-input-pack" placeholder="Cantidad" data-id="{{ producto.id }}" data-nombre="{{ producto.nombre }}" data-precio="{{ producto.precio_bulto }}">
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <button class="btn btn-success floating-btn" id="enviarBtn" style="display:none;">
+        Enviar pedido por WhatsApp
+    </button>
+
+    <script>
+        // Carrito temporal
+        let carrito = {};
+
+        // Mostrar botón solo si hay productos en el carrito
+        function toggleEnviarBtn() {
+            document.getElementById('enviarBtn').style.display = Object.keys(carrito).length > 0 ? 'block' : 'none';
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Solo cantidad por pack
+            document.querySelectorAll('.cantidad-input-pack').forEach(function(input) {
+                input.addEventListener('input', function() {
+                    let id = this.dataset.id + '_pack';
+                    let nombre = this.dataset.nombre;
+                    let precio = this.dataset.precio;
+                    let cantidad = parseInt(this.value) || 0;
+
+                    if (cantidad > 0) {
+                        this.classList.add('cantidad-verde');
+                        carrito[id] = {nombre, precio, cantidad};
+                    } else {
+                        this.classList.remove('cantidad-verde');
+                        delete carrito[id];
+                    }
+                    toggleEnviarBtn();
+                });
+            });
+
+            // Enviar por WhatsApp a número fijo (solo bultos)
+            document.getElementById('enviarBtn').addEventListener('click', function() {
+                let nombre = document.getElementById('nombreCliente').value.trim();
+                if(!nombre) {
+                    alert('Por favor, complete nombre.');
+                    return;
+                }
+                let mensaje = `Hola! 👋%0A%0A`;
+                mensaje += `Mi nombre es *${nombre}* y quiero hacer el siguiente pedido:%0A%0A`;
+                let total = 0;
+                Object.values(carrito).forEach(function(item) {
+                    mensaje += `• *${item.nombre}* x${item.cantidad} — $${item.precio}%0A`; // precio es el precio_bulto
+                    total += item.cantidad * parseFloat(item.precio);
+                });
+                mensaje += `%0A*Total:* $${total}%0A%0A¡Muchas gracias! 🙏`;
+                let url = `https://wa.me/5491122633878?text=${mensaje}`;
+                window.open(url, '_blank');
+            });
+
+            // Filtrar por categoría
+            document.getElementById('categoriaSelect').addEventListener('change', function() {
+                filterCards();
+            });
+        });
+
+        // Buscador de productos por código o nombre y filtro por categoría
+        function filterCards(inputId, columnIndex) {
+            let categoria = document.getElementById('categoriaSelect').value;
+            let codigoFilter = document.getElementById('productInput').value.toUpperCase();
+            let nombreFilter = document.getElementById('nameInput').value.toUpperCase();
+            let cards = document.querySelectorAll('.producto-card');
+            cards.forEach(function(card) {
+                let codigo = card.getAttribute('data-codigo') || '';
+                let nombre = card.getAttribute('data-nombre') || '';
+                let cat = card.getAttribute('data-categoria') || '';
+                let show = true;
+                if (categoria && cat !== categoria) {
+                    show = false;
+                }
+                if (codigoFilter && show) {
+                    show = codigo.indexOf(codigoFilter) > -1;
+                }
+                if (nombreFilter && show) {
+                    show = nombre.indexOf(nombreFilter) > -1;
+                }
+                card.style.display = show ? "" : "none";
+            });
+        }
+    </script>
+</body>
+</html>

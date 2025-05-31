@@ -1,0 +1,85 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cargar Archivo Excel</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+{% block navbar %}
+    {% include "navbar.html" %}
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="upload-card shadow p-5 rounded">
+        <h1 class="text-center text-primary mb-4">Cargar Archivo Excel</h1>
+        <p class="text-center mb-4">Sube un archivo Excel con la lista de productos para agregarlos al sistema.</p>
+        <form method="post" enctype="multipart/form-data" class="upload-form" id="uploadForm">
+            {% csrf_token %}
+            <div class="form-group">
+                {{ form.as_p }}
+            </div>
+            <div class="text-center">
+                <button type="submit" class="btn btn-primary btn-lg px-5 py-2">Cargar</button>
+            </div>
+        </form>
+        <div id="loading" style="display:none;" class="loading-overlay">
+            <div class="loading-content text-center">
+                <p>Cargando, por favor espera...</p>
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block footer %}
+
+
+<script>
+    document.getElementById('uploadForm').onsubmit = function() {
+        // Mostrar el mensaje de carga
+        document.getElementById('loading').style.display = 'flex';
+        
+        // Deshabilitar el botón de carga para prevenir múltiples envíos
+        this.querySelector('button[type="submit"]').disabled = true;
+    };
+
+    // Manejo de la respuesta JSON
+    document.getElementById('uploadForm').addEventListener('submit', function(event) {
+        event.preventDefault(); // Evita el envío normal del formulario
+        const formData = new FormData(this);
+
+        fetch(this.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Redirige a la lista de productos
+                window.location.href = '{% url "producto_list" %}';
+            } else if (data.error) {
+                // Manejar el error (por ejemplo, mostrar un mensaje)
+                alert(data.error);
+                document.getElementById('loading').style.display = 'none'; // Ocultar el mensaje de carga
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            document.getElementById('loading').style.display = 'none'; // Ocultar el mensaje de carga
+        });
+    });
+</script>
+{% endblock %}
+</body>
+</html>
